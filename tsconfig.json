@@ -1,17 +1,42 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "composite": true
+    "composite": true,
+
+    "baseUrl": ".",
+
+    "paths": {
+      "@yuvasena/shared": [
+        "packages/shared/src"
+      ],
+      "@yuvasena/shared/*": [
+        "packages/shared/src/*"
+      ]
+    }
   },
-  "exclude": ["node_modules", "dist", "build", ".next"]
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next"
+  ]
 }
