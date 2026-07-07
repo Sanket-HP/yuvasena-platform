@@ -1,0 +1,21 @@
+{
+  "name": "yuvasena-platform",
+  "version": "1.0.0",
+  "description": "Yuva Sena Digital Platform Production-Ready Monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "backend:dev": "npm run start:dev -w apps/backend",
+    "web:dev": "npm run dev -w apps/web",
+    "admin:dev": "npm run dev -w apps/admin",
+    "mobile:dev": "npm run start -w apps/mobile",
+    "build": "npm run build --workspaces --if-present",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
