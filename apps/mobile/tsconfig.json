@@ -1,23 +1,31 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
 
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "declaration": false,
+    "declarationMap": false,
+    "composite": false,
 
-    "strict": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+
+    "allowJs": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
 
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "composite": true,
+    "outDir": "./dist",
 
-    "baseUrl": ".",
+    "baseUrl": "../../",
+
     "paths": {
+      "@/*": [
+        "apps/backend/src/*"
+      ],
       "@yuvasena/shared": [
         "packages/shared/src"
       ],
@@ -26,11 +34,8 @@
       ]
     }
   },
-
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    ".next"
+  "include": [
+    "src/**/*",
+    "prisma/**/*"
   ]
 }
