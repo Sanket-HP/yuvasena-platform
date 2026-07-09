@@ -5,6 +5,8 @@ web_reach/
 
 # Build outputs
 dist/
+!packages/shared/dist/
+!packages/shared/dist/**
 build/
 .next/
 out/
