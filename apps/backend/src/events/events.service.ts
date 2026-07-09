@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventCreateInput } from '@yuvasena/shared';
+import { EventStatus, MemberStatus } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
@@ -20,7 +21,7 @@ export class EventsService {
         longitude: input.longitude,
         maxRegistrations: input.maxRegistrations,
         bannerUrl: input.bannerUrl || 'https://images.unsplash.com/photo-1511578314322-379afb476865?fit=crop&w=800&h=450&q=80',
-        status: 'UPCOMING'
+        status: EventStatus.UPCOMING
       }
     });
 
@@ -87,7 +88,7 @@ export class EventsService {
       throw new NotFoundException('Member profile not found');
     }
 
-    if (member.status !== 'APPROVED') {
+    if (member.status !== MemberStatus.APPROVED) {
       throw new ForbiddenException('Only approved members can register for events');
     }
 
@@ -103,7 +104,7 @@ export class EventsService {
       throw new NotFoundException(`Event with ID ${eventId} not found`);
     }
 
-    if (event.status !== 'UPCOMING') {
+    if (event.status !== EventStatus.UPCOMING) {
       throw new BadRequestException('Registration is only open for upcoming events');
     }
 
@@ -234,8 +235,9 @@ export class EventsService {
       { header: 'Attended?', key: 'attended', width: 12 }
     ];
 
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = {
       type: 'pattern',
       pattern: 'solid',
       fgColor: { argb: 'FFFF6B00' }
@@ -260,4 +262,3 @@ export class EventsService {
     res.end();
   }
 }
-import { ForbiddenException } from '@nestjs/common';

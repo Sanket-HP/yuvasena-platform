@@ -4,6 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,7 +18,7 @@ async function bootstrap() {
   
   // 3. CORS Configuration
   app.enableCors({
-    origin: '*', // Allow all origins for mobile client, customize in production
+    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : '*', 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -24,7 +26,11 @@ async function bootstrap() {
   // 4. Response Compression
   app.use(compression());
 
-  // 5. Global Validation Pipe
+  // 5. Global Filters & Interceptors
+  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  // 6. Global Validation Pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -36,7 +42,7 @@ async function bootstrap() {
     }),
   );
 
-  // 6. Swagger OpenAPI Documentation
+  // 7. Swagger OpenAPI Documentation
   const config = new DocumentBuilder()
     .setTitle('Yuva Sena Digital Platform API')
     .setDescription('Production-ready backend services for membership registration, events, complaints, and leaders portal.')
@@ -47,7 +53,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  // 7. Port Binding
+  // 8. Port Binding
   const port = process.env.PORT || 4000;
   await app.listen(port);
   console.log(`[Yuva Sena API Backend] running on: http://localhost:${port}/api/v1`);

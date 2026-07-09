@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, UseGuards, Req, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { 
   EmailLoginSchema, 
   OtpRequestSchema, 
@@ -23,15 +24,8 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 400, description: 'Invalid input schema' })
   @ApiResponse({ status: 409, description: 'Email or Mobile number already in use' })
-  async register(@Body() body: any) {
-    const parseResult = MemberRegisterSchema.safeParse(body);
-    if (!parseResult.success) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-      });
-    }
-    return this.authService.register(parseResult.data);
+  async register(@Body(new ZodValidationPipe(MemberRegisterSchema)) body: MemberRegisterInput) {
+    return this.authService.register(body);
   }
 
   @Post('login')
@@ -39,45 +33,24 @@ export class AuthController {
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful, returns JWT access token' })
   @ApiResponse({ status: 401, description: 'Invalid credentials or suspended account' })
-  async login(@Body() body: any) {
-    const parseResult = EmailLoginSchema.safeParse(body);
-    if (!parseResult.success) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-      });
-    }
-    return this.authService.loginWithEmail(parseResult.data);
+  async login(@Body(new ZodValidationPipe(EmailLoginSchema)) body: EmailLoginInput) {
+    return this.authService.loginWithEmail(body);
   }
 
   @Post('otp/request')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request OTP for mobile authentication' })
   @ApiResponse({ status: 200, description: 'OTP sent' })
-  async requestOtp(@Body() body: any) {
-    const parseResult = OtpRequestSchema.safeParse(body);
-    if (!parseResult.success) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-      });
-    }
-    return this.authService.requestOtp(parseResult.data);
+  async requestOtp(@Body(new ZodValidationPipe(OtpRequestSchema)) body: OtpRequestInput) {
+    return this.authService.requestOtp(body);
   }
 
   @Post('otp/verify')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify mobile OTP and authenticate' })
   @ApiResponse({ status: 200, description: 'Authentication successful or new user redirection code' })
-  async verifyOtp(@Body() body: any) {
-    const parseResult = OtpVerifySchema.safeParse(body);
-    if (!parseResult.success) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-      });
-    }
-    return this.authService.verifyOtp(parseResult.data);
+  async verifyOtp(@Body(new ZodValidationPipe(OtpVerifySchema)) body: OtpVerifyInput) {
+    return this.authService.verifyOtp(body);
   }
 
   @Get('me')

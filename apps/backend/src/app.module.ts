@@ -9,6 +9,8 @@ import { GalleryModule } from './gallery/gallery.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { GeographyModule } from './geography/geography.module';
+import { RedisModule } from './redis/redis.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -21,7 +23,9 @@ import { GeographyModule } from './geography/geography.module';
     GalleryModule,
     NotificationsModule,
     AnalyticsModule,
-    GeographyModule
+    GeographyModule,
+    RedisModule,
+    HealthModule
   ]
 })
 export class AppModule {}

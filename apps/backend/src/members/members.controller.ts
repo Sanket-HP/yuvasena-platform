@@ -16,9 +16,10 @@ import { MembersService } from './members.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { Role } from '@prisma/client';
+import { Role, MemberStatus } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { ProfileUpdateSchema } from '@yuvasena/shared';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { MemberRegisterSchema, MemberRegisterInput } from '@yuvasena/shared';
 import { Response } from 'express';
 
 @ApiTags('Members')
@@ -38,7 +39,20 @@ export class MembersController {
   @ApiQuery({ name: 'talukaId', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'bloodGroup', required: false, type: String })
-  async getMembers(@Query() query: any) {
+  async getMembers(@Query() query: any, @Req() req: any) {
+    // Regional Scope Isolation
+    if (req.user.role === Role.DISTRICT_ADMIN) {
+      if (!req.user.memberProfile?.districtId) {
+        throw new ForbiddenException('District Admin profile is missing regional assignment');
+      }
+      query.districtId = req.user.memberProfile.districtId;
+    } else if (req.user.role === Role.TALUKA_ADMIN) {
+      if (!req.user.memberProfile?.talukaId) {
+        throw new ForbiddenException('Taluka Admin profile is missing regional assignment');
+      }
+      query.talukaId = req.user.memberProfile.talukaId;
+    }
+
     return this.membersService.findAll(query);
   }
 
@@ -57,19 +71,11 @@ export class MembersController {
 
   @Put('profile')
   @ApiOperation({ summary: 'Update current user member profile' })
-  async updateProfile(@Req() req: any, @Body() body: any) {
-    // Add logged-in userId to validation
-    const payload = { ...body, id: req.user.id };
-    const parseResult = ProfileUpdateSchema.safeParse(payload);
-    
-    if (!parseResult.success) {
-      throw new BadRequestException({
-        message: 'Validation failed',
-        errors: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-      });
-    }
-
-    return this.membersService.updateProfile(req.user.id, parseResult.data);
+  async updateProfile(
+    @Req() req: any, 
+    @Body(new ZodValidationPipe(MemberRegisterSchema.partial())) body: Partial<MemberRegisterInput>
+  ) {
+    return this.membersService.updateProfile(req.user.id, body);
   }
 
   @Get(':id')
@@ -77,9 +83,17 @@ export class MembersController {
   async getMember(@Param('id') id: string, @Req() req: any) {
     const member = await this.membersService.findOne(id);
     
-    // Check ownership or admin privilege
+    // Authorization Check: Only owner, or admin with correct district scoping
     if (req.user.role === Role.MEMBER && member.userId !== req.user.id) {
       throw new ForbiddenException('You do not have permission to view this member profile');
+    }
+    
+    if (req.user.role === Role.DISTRICT_ADMIN && member.districtId !== req.user.memberProfile?.districtId) {
+      throw new ForbiddenException('You cannot access profiles outside of your assigned district');
+    }
+
+    if (req.user.role === Role.TALUKA_ADMIN && member.talukaId !== req.user.memberProfile?.talukaId) {
+      throw new ForbiddenException('You cannot access profiles outside of your assigned taluka');
     }
     
     return member;
@@ -96,19 +110,34 @@ export class MembersController {
     if (!status) {
       throw new BadRequestException('Status field is required');
     }
+
+    // Verify regional authorization scoping
+    const member = await this.membersService.findOne(id);
+    if (req.user.role === Role.DISTRICT_ADMIN && member.districtId !== req.user.memberProfile?.districtId) {
+      throw new ForbiddenException('You do not have permission to change status of members in other districts');
+    }
+
     return this.membersService.updateStatus(id, status, req.user.id);
   }
 
   @Get(':id/card')
   @ApiOperation({ summary: 'Download member PDF digital card' })
   async downloadCard(@Param('id') id: string, @Res() res: Response, @Req() req: any) {
+    const member = await this.membersService.findOne(id);
+
     // Check authorization: must be admin or card owner
-    if (req.user.role === Role.MEMBER) {
-      const member = await this.membersService.findOne(id);
-      if (member.userId !== req.user.id) {
-        throw new ForbiddenException('You cannot download another member\'s card');
-      }
+    if (req.user.role === Role.MEMBER && member.userId !== req.user.id) {
+      throw new ForbiddenException('You cannot download another member\'s card');
     }
+
+    if (req.user.role === Role.DISTRICT_ADMIN && member.districtId !== req.user.memberProfile?.districtId) {
+      throw new ForbiddenException('You cannot download membership cards for users in other districts');
+    }
+
+    if (req.user.role === Role.TALUKA_ADMIN && member.talukaId !== req.user.memberProfile?.talukaId) {
+      throw new ForbiddenException('You cannot download membership cards for users in other talukas');
+    }
+
     return this.membersService.generateCardPdf(id, res);
   }
 }

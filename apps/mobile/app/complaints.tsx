@@ -4,6 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
 export default function Complaints() {
   const router = useRouter();
   const [title, setTitle] = useState('');
@@ -67,7 +69,7 @@ export default function Complaints() {
       // Mock upload image URL or upload base64. Let's send a standard mock photo URL for database validation
       const imageUrls = image ? ['https://images.unsplash.com/photo-1590674899484-d5640e854abe?fit=crop&w=800&h=450&q=80'] : [];
 
-      const res = await fetch('http://localhost:4000/api/v1/complaints', {
+      const res = await fetch(`${API_URL}/complaints`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

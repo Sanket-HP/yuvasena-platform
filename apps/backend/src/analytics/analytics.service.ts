@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MemberStatus, ComplaintStatus } from '@prisma/client';
 
 @Injectable()
 export class AnalyticsService {
@@ -27,12 +28,12 @@ export class AnalyticsService {
 
       // 3. Pending Approvals
       this.prisma.member.count({
-        where: { status: 'PENDING' }
+        where: { status: MemberStatus.PENDING }
       }),
 
       // 4. Active Complaints (SUBMITTED or ASSIGNED)
       this.prisma.complaint.count({
-        where: { status: { in: ['SUBMITTED', 'ASSIGNED'] } }
+        where: { status: { in: [ComplaintStatus.SUBMITTED, ComplaintStatus.ASSIGNED] } }
       }),
 
       // 5. Total Events

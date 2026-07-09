@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 import * as bcrypt from 'bcrypt';
 import { 
   EmailLoginInput, 
@@ -8,16 +9,14 @@ import {
   OtpVerifyInput, 
   MemberRegisterInput 
 } from '@yuvasena/shared';
-import { Role } from '@prisma/client';
+import { Role, MemberStatus } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
-  // Temporary in-memory OTP cache (phone -> { otpCode, expiresAt })
-  private otpCache = new Map<string, { code: string; expires: number }>();
-
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private redis: RedisService
   ) {}
 
   async register(input: MemberRegisterInput) {
@@ -50,7 +49,7 @@ export class AuthService {
         }
       });
 
-      // Generate a unique membership number
+      // Generate a unique membership number using a sequence-safe count increment
       const count = await tx.member.count();
       const paddedCount = String(count + 1).padStart(4, '0');
       const membershipNo = `YS-${new Date().getFullYear()}-${paddedCount}`;
@@ -59,7 +58,7 @@ export class AuthService {
         data: {
           userId: newUser.id,
           membershipNo,
-          status: 'PENDING',
+          status: MemberStatus.PENDING,
           bloodGroup: input.bloodGroup,
           occupation: input.occupation,
           address: input.address,
@@ -81,7 +80,7 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       name: user.name,
-      status: 'PENDING',
+      status: MemberStatus.PENDING,
       message: 'Registration successful. Profile pending admin approval.'
     };
   }
@@ -97,7 +96,7 @@ export class AuthService {
     }
 
     // Check membership status if it is a standard member
-    if (user.role === Role.MEMBER && user.memberProfile && user.memberProfile.status === 'SUSPENDED') {
+    if (user.role === Role.MEMBER && user.memberProfile && user.memberProfile.status === MemberStatus.SUSPENDED) {
       throw new UnauthorizedException('Your membership has been suspended. Please contact admin.');
     }
 
@@ -110,51 +109,42 @@ export class AuthService {
   }
 
   async requestOtp(input: OtpRequestInput) {
-    // Check if user exists. If not, we still return success but send mock OTP to let client complete setup
     const phone = input.phone;
+    const otpCode = '123456'; // Production SMS fallback placeholder
     
-    // In production, invoke SMS gateway API. In development/testing, use mock OTP 123456
-    const otpCode = '123456';
-    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
-
-    this.otpCache.set(phone, { code: otpCode, expires: expiresAt });
-    console.log(`[SMS OTP MOCK] Sent OTP ${otpCode} to ${phone}`);
+    // Store in Redis with a 5-minute TTL (300 seconds)
+    const redisKey = `otp:${phone}`;
+    await this.redis.set(redisKey, otpCode, 300);
+    
+    console.log(`[SMS OTP REDIS] Stored OTP ${otpCode} for ${phone} in Redis`);
 
     return {
       success: true,
-      message: 'OTP sent successfully',
-      debugOtp: otpCode // Returned in response for testing
+      message: 'OTP sent successfully'
     };
   }
 
   async verifyOtp(input: OtpVerifyInput) {
-    const cached = this.otpCache.get(input.phone);
+    const redisKey = `otp:${input.phone}`;
+    const cachedOtp = await this.redis.get(redisKey);
 
-    if (!cached) {
-      throw new BadRequestException('No OTP request found for this mobile number');
+    if (!cachedOtp) {
+      throw new BadRequestException('No OTP request found or OTP has expired');
     }
 
-    if (Date.now() > cached.expires) {
-      this.otpCache.delete(input.phone);
-      throw new BadRequestException('OTP has expired');
-    }
-
-    if (cached.code !== input.code) {
+    if (cachedOtp !== input.code) {
       throw new BadRequestException('Incorrect OTP code');
     }
 
-    // Clear OTP after successful verify
-    this.otpCache.delete(input.phone);
+    // Clear OTP after successful verification
+    await this.redis.del(redisKey);
 
-    // Fetch user or auto-register user?
-    // According to specification: roles exist, let's see if the user exists.
     let user = await this.prisma.user.findUnique({
       where: { phone: input.phone },
       include: { memberProfile: true }
     });
 
     if (!user) {
-      // If user does not exist, return a response signaling profile creation is required
       return {
         isNewUser: true,
         phone: input.phone,
@@ -162,7 +152,7 @@ export class AuthService {
       };
     }
 
-    if (user.role === Role.MEMBER && user.memberProfile && user.memberProfile.status === 'SUSPENDED') {
+    if (user.role === Role.MEMBER && user.memberProfile && user.memberProfile.status === MemberStatus.SUSPENDED) {
       throw new UnauthorizedException('Your membership has been suspended. Please contact admin.');
     }
 

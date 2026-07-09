@@ -26,13 +26,15 @@ const fallbackEvents = [
   }
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
 export default function EventsPage() {
   const [events, setEvents] = useState<any[]>(fallbackEvents);
   const [registered, setRegistered] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/v1/events')
+    fetch(`${API_URL}/events`)
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data) && data.length > 0) setEvents(data);
@@ -49,7 +51,7 @@ export default function EventsPage() {
     }
 
     try {
-      const res = await fetch(`http://localhost:4000/api/v1/events/${eventId}/register`, {
+      const res = await fetch(`${API_URL}/events/${eventId}/register`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

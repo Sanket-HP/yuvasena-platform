@@ -32,6 +32,8 @@ import { Line, Bar } from 'react-chartjs-2';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
+const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:4000/api/v1';
+
 // Register Chart.js elements
 ChartJS.register(
   CategoryScale,
@@ -95,25 +97,25 @@ export default function App() {
       const headers = { 'Authorization': `Bearer ${token}` };
       
       if (currentTab === 'overview') {
-        const res = await fetch('http://localhost:4000/api/v1/analytics/overview', { headers });
+        const res = await fetch(`${API_URL}/analytics/overview`, { headers });
         if (res.ok) {
           const data = await res.json();
           setAnalytics(data);
         }
       } else if (currentTab === 'members') {
-        const res = await fetch('http://localhost:4000/api/v1/members', { headers });
+        const res = await fetch(`${API_URL}/members`, { headers });
         if (res.ok) {
           const data = await res.json();
           setMembers(data.items || []);
         }
       } else if (currentTab === 'complaints') {
-        const res = await fetch('http://localhost:4000/api/v1/complaints/admin', { headers });
+        const res = await fetch(`${API_URL}/complaints/admin`, { headers });
         if (res.ok) {
           const data = await res.json();
           setComplaints(data || []);
         }
       } else if (currentTab === 'events') {
-        const res = await fetch('http://localhost:4000/api/v1/events');
+        const res = await fetch(`${API_URL}/events`);
         if (res.ok) {
           const data = await res.json();
           setEvents(data || []);
@@ -129,7 +131,7 @@ export default function App() {
     setLoginError(null);
 
     try {
-      const res = await fetch('http://localhost:4000/api/v1/auth/login', {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: loginEmail, password: loginPassword })
@@ -163,7 +165,7 @@ export default function App() {
   // Member Status Controls (Approve / Suspend)
   const patchMemberStatus = async (memberId: string, newStatus: string) => {
     try {
-      const res = await fetch(`http://localhost:4000/api/v1/members/${memberId}/status`, {
+      const res = await fetch(`${API_URL}/members/${memberId}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -184,7 +186,7 @@ export default function App() {
   const resolveComplaint = async (status: string) => {
     if (!selectedComplaint) return;
     try {
-      const res = await fetch(`http://localhost:4000/api/v1/complaints/${selectedComplaint.id}/resolve`, {
+      const res = await fetch(`${API_URL}/complaints/${selectedComplaint.id}/resolve`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -207,7 +209,7 @@ export default function App() {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/api/v1/events', {
+      const res = await fetch(`${API_URL}/events`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -232,7 +234,7 @@ export default function App() {
   const handleCreateNews = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/api/v1/news', {
+      const res = await fetch(`${API_URL}/news`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -256,7 +258,7 @@ export default function App() {
   const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:4000/api/v1/notifications', {
+      const res = await fetch(`${API_URL}/notifications`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -540,7 +542,7 @@ export default function App() {
                                 Approve
                               </button>
                             )}
-                            <a href={`http://localhost:4000/api/v1/members/${m.id}/card`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ padding: '6px' }}>
+                            <a href={`${API_URL}/members/${m.id}/card`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ padding: '6px' }}>
                               <Download size={14} />
                             </a>
                           </td>

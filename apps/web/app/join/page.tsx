@@ -49,6 +49,8 @@ export default function Join() {
     profilePhotoUrl: ''
   });
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
   // Dynamic Geography state
   const [districts, setDistricts] = useState(fallbackDistricts);
   const [talukas, setTalukas] = useState<{ id: string; name: string }[]>([]);
@@ -56,7 +58,7 @@ export default function Join() {
 
   // Load districts on mount (try backend API, fallback on failure)
   useEffect(() => {
-    fetch('http://localhost:4000/api/v1/geography/districts')
+    fetch(`${API_URL}/geography/districts`)
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data)) setDistricts(data);
@@ -70,7 +72,7 @@ export default function Join() {
       setTalukas([]);
       return;
     }
-    fetch(`http://localhost:4000/api/v1/geography/districts/${formData.districtId}/talukas`)
+    fetch(`${API_URL}/geography/districts/${formData.districtId}/talukas`)
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data)) setTalukas(data);
@@ -88,7 +90,7 @@ export default function Join() {
       setBooths([]);
       return;
     }
-    fetch(`http://localhost:4000/api/v1/geography/talukas/${formData.talukaId}/booths`)
+    fetch(`${API_URL}/geography/talukas/${formData.talukaId}/booths`)
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data)) setBooths(data);
@@ -143,7 +145,7 @@ export default function Join() {
     };
 
     try {
-      const response = await fetch('http://localhost:4000/api/v1/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

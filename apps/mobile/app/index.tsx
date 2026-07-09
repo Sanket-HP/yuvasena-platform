@@ -3,6 +3,8 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image,
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
 export default function Index() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function Index() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:4000/api/v1/auth/otp/request', {
+      const res = await fetch(`${API_URL}/auth/otp/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone })
@@ -53,7 +55,7 @@ export default function Index() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:4000/api/v1/auth/otp/verify', {
+      const res = await fetch(`${API_URL}/auth/otp/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, code: otp })

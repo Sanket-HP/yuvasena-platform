@@ -15,6 +15,19 @@ enum Role {
   MEMBER
 }
 
+enum MemberStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum EventStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
 enum ComplaintStatus {
   SUBMITTED
   ASSIGNED
@@ -53,7 +66,7 @@ model Member {
   id              String         @id @default(uuid())
   userId          String         @unique
   membershipNo    String         @unique
-  status          String         @default("PENDING") // PENDING, APPROVED, SUSPENDED
+  status          MemberStatus   @default(PENDING)
   qrCodeUrl       String?
   bloodGroup      String
   occupation      String
@@ -79,6 +92,10 @@ model Member {
   registrations   Registration[]
   attendance      Attendance[]
   complaints      Complaint[]
+
+  @@index([districtId])
+  @@index([talukaId])
+  @@index([boothId])
 }
 
 model District {
@@ -98,6 +115,7 @@ model Taluka {
   members    Member[]
 
   @@unique([name, districtId])
+  @@index([districtId])
 }
 
 model Booth {
@@ -109,6 +127,7 @@ model Booth {
   members  Member[]
 
   @@unique([boothNo, talukaId])
+  @@index([talukaId])
 }
 
 model Event {
@@ -122,7 +141,7 @@ model Event {
   maxRegistrations Int?
   bannerUrl        String?
   qrCodeUrl        String?
-  status           String         @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED, CANCELLED
+  status           EventStatus    @default(UPCOMING)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -154,6 +173,7 @@ model Attendance {
   verifiedBy   User?    @relation("VerifiedByAdmin", fields: [verifiedById], references: [id])
 
   @@unique([memberId, eventId])
+  @@index([verifiedById])
 }
 
 model Complaint {
@@ -169,6 +189,9 @@ model Complaint {
   assignedAdmin   User?           @relation("AssignedAdmin", fields: [assignedAdminId], references: [id])
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+
+  @@index([memberId])
+  @@index([assignedAdminId])
 }
 
 model Gallery {
@@ -197,7 +220,7 @@ model Notification {
   id             String    @id @default(uuid())
   title          String
   body           String
-  targetAudience String    @default("ALL") // ALL, MEMBERS, ADMINS, DISTRICT_ADMINS
+  targetAudience String    @default("ALL")
   districtId     String?
   scheduleTime   DateTime?
   sentStatus     Boolean   @default(false)
@@ -219,4 +242,6 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }

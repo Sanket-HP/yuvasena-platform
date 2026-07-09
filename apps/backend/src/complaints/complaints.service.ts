@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ComplaintSubmitInput, ComplaintResolveInput } from '@yuvasena/shared';
 import { ComplaintStatus } from '@prisma/client';
@@ -40,6 +40,21 @@ export class ComplaintsService {
       where: { memberId: member.id },
       orderBy: { createdAt: 'desc' }
     });
+  }
+
+  async findOne(id: string) {
+    const complaint = await this.prisma.complaint.findUnique({
+      where: { id },
+      include: {
+        member: true
+      }
+    });
+
+    if (!complaint) {
+      throw new NotFoundException(`Complaint with ID ${id} not found`);
+    }
+
+    return complaint;
   }
 
   async findAll(query: { districtId?: string; status?: ComplaintStatus }) {

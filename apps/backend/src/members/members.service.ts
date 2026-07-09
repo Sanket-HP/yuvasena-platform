@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { MemberStatus } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import PDFDocument from 'pdfkit';
 import * as ExcelJS from 'exceljs';
@@ -27,7 +27,7 @@ export class MembersService {
 
     if (query.districtId) where.districtId = query.districtId;
     if (query.talukaId) where.talukaId = query.talukaId;
-    if (query.status) where.status = query.status;
+    if (query.status) where.status = query.status as MemberStatus;
     if (query.bloodGroup) where.bloodGroup = query.bloodGroup;
 
     if (query.search) {
@@ -192,13 +192,13 @@ export class MembersService {
       throw new NotFoundException(`Member with ID ${id} not found`);
     }
 
-    if (!['PENDING', 'APPROVED', 'SUSPENDED'].includes(status)) {
+    if (!Object.values(MemberStatus).includes(status as MemberStatus)) {
       throw new BadRequestException('Invalid status value. Must be PENDING, APPROVED, or SUSPENDED.');
     }
 
     const updated = await this.prisma.member.update({
       where: { id },
-      data: { status },
+      data: { status: status as MemberStatus },
       include: { user: true }
     });
 
@@ -239,7 +239,6 @@ export class MembersService {
     doc.pipe(res);
 
     // Styling & Card layout
-    // Background Saffron Gradient Border
     doc.rect(5, 5, 290, 470).lineWidth(4).stroke('#FF6B00');
     
     // Header
@@ -247,8 +246,7 @@ export class MembersService {
     doc.fillColor('#FFFFFF').fontSize(20).font('Helvetica-Bold').text('YUVA SENA', 15, 25, { align: 'center' });
     doc.fontSize(10).font('Helvetica').text('DIGITAL MEMBERSHIP CARD', 15, 50, { align: 'center' });
 
-    // Profile Pic placeholder (uses a fallback drawing if photo url is missing or not locally loadable)
-    // Draw a bounding rectangle for photo
+    // Profile Pic boundary
     doc.rect(100, 110, 100, 110).lineWidth(1).stroke('#1E1E24');
     doc.fillColor('#F8F9FA').rect(101, 111, 98, 108).fill();
     doc.fillColor('#1E1E24').fontSize(8).font('Helvetica').text('PHOTO', 100, 160, { width: 100, align: 'center' });
@@ -274,23 +272,20 @@ export class MembersService {
     // Embed QR Code
     doc.image(qrCodeBuffer, 110, 380, { width: 80, height: 80 });
 
-    // Footer copyright
     doc.fillColor('#777777').fontSize(7).text('Valid official digital copy of Yuva Sena', 15, 460, { align: 'center' });
-
     doc.end();
   }
 
   async exportExcel(res: Response) {
-    const members = await this.prisma.member.findMany({
-      include: {
-        user: true,
-        district: true,
-        taluka: true,
-        booth: true
-      }
-    });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=YuvaSena_Members_Roster.xlsx');
 
-    const workbook = new ExcelJS.Workbook();
+    const options = {
+      stream: res,
+      useStyles: true,
+      useSharedStrings: true
+    };
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter(options);
     const worksheet = workbook.addWorksheet('Members List');
 
     worksheet.columns = [
@@ -308,33 +303,60 @@ export class MembersService {
     ];
 
     // Format headers
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = {
       type: 'pattern',
       pattern: 'solid',
       fgColor: { argb: 'FFFF6B00' } // Saffron
     };
+    headerRow.commit();
 
-    for (const m of members) {
-      worksheet.addRow({
-        membershipNo: m.membershipNo,
-        name: m.user.name,
-        email: m.user.email,
-        phone: m.user.phone,
-        district: m.district.name,
-        taluka: m.taluka.name,
-        booth: m.booth ? m.booth.name : 'N/A',
-        bloodGroup: m.bloodGroup,
-        occupation: m.occupation,
-        status: m.status,
-        createdAt: m.createdAt.toISOString().split('T')[0]
+    let hasMore = true;
+    let lastId: string | undefined = undefined;
+
+    while (hasMore) {
+      const batch: any[] = await this.prisma.member.findMany({
+        take: 1000,
+        skip: lastId ? 1 : 0,
+        cursor: lastId ? { id: lastId } : undefined,
+        include: {
+          user: true,
+          district: true,
+          taluka: true,
+          booth: true
+        },
+        orderBy: { id: 'asc' }
       });
+
+      if (batch.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      for (const m of batch) {
+        worksheet.addRow({
+          membershipNo: m.membershipNo,
+          name: m.user.name,
+          email: m.user.email,
+          phone: m.user.phone,
+          district: m.district.name,
+          taluka: m.taluka.name,
+          booth: m.booth ? m.booth.name : 'N/A',
+          bloodGroup: m.bloodGroup,
+          occupation: m.occupation,
+          status: m.status,
+          createdAt: m.createdAt.toISOString().split('T')[0]
+        }).commit();
+      }
+
+      lastId = batch[batch.length - 1].id;
+      if (batch.length < 1000) {
+        hasMore = false;
+      }
     }
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=YuvaSena_Members_Roster.xlsx');
-
-    await workbook.xlsx.write(res);
-    res.end();
+    await worksheet.commit();
+    await workbook.commit();
   }
 }

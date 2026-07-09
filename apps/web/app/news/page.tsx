@@ -24,12 +24,14 @@ const fallbackNews = [
   }
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
 export default function NewsPage() {
   const [news, setNews] = useState<any[]>(fallbackNews);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/v1/news')
+    fetch(`${API_URL}/news`)
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data) && data.length > 0) setNews(data);

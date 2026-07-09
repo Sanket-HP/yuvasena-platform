@@ -27,11 +27,13 @@ const fallbackGallery = [
   }
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
 export default function GalleryPage() {
   const [media, setMedia] = useState<any[]>(fallbackGallery);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/v1/gallery')
+    fetch(`${API_URL}/gallery`)
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data) && data.length > 0) setMedia(data);

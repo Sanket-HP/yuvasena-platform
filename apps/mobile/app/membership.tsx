@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
 export default function Membership() {
   const [loading, setLoading] = useState(true);
   const [member, setMember] = useState<any | null>(null);
@@ -16,7 +18,7 @@ export default function Membership() {
       const token = await AsyncStorage.getItem('accessToken');
       if (!token) throw new Error('Authentication token not found');
 
-      const res = await fetch('http://localhost:4000/api/v1/members/profile', {
+      const res = await fetch(`${API_URL}/members/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
