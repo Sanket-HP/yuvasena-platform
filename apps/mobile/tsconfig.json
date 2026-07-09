@@ -1,41 +1,25 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
-
     "target": "ES2022",
-
-    "declaration": false,
-    "declarationMap": false,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
+    "strict": true,
     "composite": false,
-
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-
-    "outDir": "./dist",
-
-    "baseUrl": "../../",
-
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "apps/backend/src/*"
-      ],
-      "@yuvasena/shared": [
-        "packages/shared/src"
-      ],
-      "@yuvasena/shared/*": [
-        "packages/shared/src/*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
-    "src/**/*",
-    "prisma/**/*"
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "references": [
+    { "path": "../../packages/shared" }
   ]
 }

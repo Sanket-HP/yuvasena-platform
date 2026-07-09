@@ -8,12 +8,16 @@
     "apps/*"
   ],
   "scripts": {
+    "install:all": "npm install",
+    "build:shared": "npm run build -w packages/shared",
+    "build:backend": "npm run build -w apps/backend",
+    "build:web": "npm run build -w apps/web",
+    "build:admin": "npm run build -w apps/admin",
+    "build": "npm run build:shared && npm run build --workspaces --if-present",
     "backend:dev": "npm run start:dev -w apps/backend",
     "web:dev": "npm run dev -w apps/web",
     "admin:dev": "npm run dev -w apps/admin",
-    "mobile:dev": "npm run start -w apps/mobile",
-    "build": "npm run build --workspaces --if-present",
-    "install:all": "npm install"
+    "mobile:dev": "npm run start -w apps/mobile"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
