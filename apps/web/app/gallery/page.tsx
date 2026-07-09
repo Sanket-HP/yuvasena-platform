@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ImageIcon, Film, Download } from 'lucide-react';
+import { API_URL } from '../config/api';
 
 const fallbackGallery = [
   {
@@ -27,7 +28,6 @@ const fallbackGallery = [
   }
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 export default function GalleryPage() {
   const [media, setMedia] = useState<any[]>(fallbackGallery);
@@ -82,3 +82,4 @@ export default function GalleryPage() {
     </div>
   );
 }
+

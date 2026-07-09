@@ -50,9 +50,9 @@ export class AnalyticsService {
 
     // Map district IDs to District Names for growth analytics chart
     const districts = await this.prisma.district.findMany();
-    const districtMap = new Map(districts.map(d => [d.id, d.name]));
+    const districtMap = new Map(districts.map((d: any) => [d.id, d.name]));
 
-    const growthData = districtGrowth.map(group => ({
+    const growthData = districtGrowth.map((group: any) => ({
       district: districtMap.get(group.districtId) || 'Unknown',
       count: group._count.id
     }));
@@ -97,3 +97,4 @@ export class AnalyticsService {
     };
   }
 }
+

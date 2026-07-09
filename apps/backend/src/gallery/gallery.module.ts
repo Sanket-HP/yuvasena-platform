@@ -8,3 +8,4 @@ import { GalleryController } from './gallery.controller';
   exports: [GalleryService]
 })
 export class GalleryModule {}
+

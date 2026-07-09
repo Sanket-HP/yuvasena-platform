@@ -31,8 +31,7 @@ import {
 import { Line, Bar } from 'react-chartjs-2';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-
-const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from './config/api';
 
 // Register Chart.js elements
 ChartJS.register(
@@ -727,3 +726,4 @@ export default function App() {
     </div>
   );
 }
+

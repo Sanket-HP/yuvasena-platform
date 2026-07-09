@@ -36,7 +36,7 @@ export class GalleryService {
       select: { albumName: true },
       distinct: ['albumName']
     });
-    return albums.map(a => a.albumName);
+    return albums.map((a: any) => a.albumName);
   }
 
   async remove(id: string) {
@@ -47,3 +47,4 @@ export class GalleryService {
     return this.prisma.gallery.delete({ where: { id } });
   }
 }
+

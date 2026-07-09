@@ -8,3 +8,4 @@ import { ComplaintsController } from './complaints.controller';
   exports: [ComplaintsService]
 })
 export class ComplaintsModule {}
+

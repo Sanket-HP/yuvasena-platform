@@ -141,3 +141,4 @@ export class MembersController {
     return this.membersService.generateCardPdf(id, res);
   }
 }
+

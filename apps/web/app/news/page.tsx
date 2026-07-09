@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Calendar, Share2, Bookmark } from 'lucide-react';
+import { API_URL } from '../config/api';
 
 const fallbackNews = [
   {
@@ -24,7 +25,6 @@ const fallbackNews = [
   }
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 export default function NewsPage() {
   const [news, setNews] = useState<any[]>(fallbackNews);
@@ -108,3 +108,4 @@ export default function NewsPage() {
     </div>
   );
 }
+

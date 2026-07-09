@@ -87,3 +87,4 @@ export class EventsController {
     return this.eventsService.exportReport(id, res);
   }
 }
+

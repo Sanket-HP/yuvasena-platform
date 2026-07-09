@@ -25,3 +25,4 @@ export class GeographyController {
     return this.geographyService.getBooths(talukaId);
   }
 }
+

@@ -79,3 +79,4 @@ export class NewsService {
     return this.prisma.news.delete({ where: { id } });
   }
 }
+

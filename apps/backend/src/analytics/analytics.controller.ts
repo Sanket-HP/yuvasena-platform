@@ -20,3 +20,4 @@ export class AnalyticsController {
     return this.analyticsService.getOverview();
   }
 }
+

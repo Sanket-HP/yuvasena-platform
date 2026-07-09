@@ -1,6 +1,5 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { Prisma } from '@prisma/client';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -15,6 +14,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     let message: string | object = 'Internal server error';
     let errors: string[] = [];
 
+    const err = exception as any;
+
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const resContent = exception.getResponse();
@@ -24,21 +25,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       } else {
         message = resContent;
       }
-    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    } else if (err && typeof err.code === 'string' && err.code.startsWith('P')) {
       // Handle Prisma Known Constraints
-      switch (exception.code) {
+      switch (err.code) {
         case 'P2002': // Unique constraint violation
           status = HttpStatus.CONFLICT;
-          const target = (exception.meta?.target as string[])?.join(', ') || 'fields';
+          const target = (err.meta?.target as string[])?.join(', ') || 'fields';
           message = `Unique constraint validation failed on: ${target}`;
           break;
         case 'P2025': // Record not found
           status = HttpStatus.NOT_FOUND;
-          message = exception.meta?.cause as string || 'Record not found';
+          message = err.meta?.cause as string || 'Record not found';
           break;
         default:
           status = HttpStatus.BAD_REQUEST;
-          message = `Database constraint error: ${exception.message}`;
+          message = `Database constraint error: ${err.message}`;
           break;
       }
     } else if (exception instanceof Error) {

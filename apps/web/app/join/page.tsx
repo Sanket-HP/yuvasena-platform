@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Check, UserPlus, Info, CheckCircle2 } from 'lucide-react';
+import { API_URL } from '../config/api';
 
 // Geographic Fallbacks for Instant Frontend Testing
 const fallbackDistricts = [
@@ -49,7 +50,6 @@ export default function Join() {
     profilePhotoUrl: ''
   });
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
   // Dynamic Geography state
   const [districts, setDistricts] = useState(fallbackDistricts);
@@ -367,3 +367,4 @@ export default function Join() {
     </div>
   );
 }
+

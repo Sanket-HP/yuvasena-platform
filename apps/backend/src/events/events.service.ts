@@ -220,7 +220,7 @@ export class EventsService {
       throw new NotFoundException(`Event with ID ${eventId} not found`);
     }
 
-    const attendedSet = new Set(event.attendance.map(a => a.memberId));
+    const attendedSet = new Set(event.attendance.map((a: any) => a.memberId));
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Event Attendees');
@@ -262,3 +262,4 @@ export class EventsService {
     res.end();
   }
 }
+

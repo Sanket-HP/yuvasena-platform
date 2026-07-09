@@ -49,3 +49,4 @@ export class NotificationsController {
     return this.notificationsService.create(parseResult.data);
   }
 }
+

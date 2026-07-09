@@ -104,3 +104,4 @@ export class ComplaintsController {
     return this.complaintsService.resolve(id, body, req.user.id);
   }
 }
+

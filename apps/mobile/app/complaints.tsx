@@ -3,8 +3,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image,
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from './config/api';
 
 export default function Complaints() {
   const router = useRouter();
@@ -172,3 +171,4 @@ const styles = StyleSheet.create({
   btnSubmitText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
   errorText: { color: '#E63946', fontSize: 12, marginBottom: 15, textAlign: 'center' }
 });
+

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from './config/api';
 
 export default function Membership() {
   const [loading, setLoading] = useState(true);
@@ -134,3 +133,4 @@ const styles = StyleSheet.create({
   qrCode: { width: 110, height: 110 },
   qrCaption: { fontSize: 9, color: '#A0A0B0', marginTop: 8 }
 });
+

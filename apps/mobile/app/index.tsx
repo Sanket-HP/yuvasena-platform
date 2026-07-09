@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from './config/api';
 
 export default function Index() {
   const router = useRouter();
@@ -216,3 +215,4 @@ const styles = StyleSheet.create({
   btnLogout: { margin: 20, padding: 16, borderHeight: 1, borderWidth: 1, borderColor: '#E63946', borderRadius: 12, alignItems: 'center' },
   btnLogoutText: { color: '#E63946', fontWeight: 'bold', fontSize: 14 }
 });
+

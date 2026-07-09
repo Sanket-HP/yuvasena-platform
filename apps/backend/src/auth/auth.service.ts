@@ -38,7 +38,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
     // 3. Create User and Member profiles in a Transaction
-    const user = await this.prisma.$transaction(async (tx) => {
+    const user = await this.prisma.$transaction(async (tx: any) => {
       const newUser = await tx.user.create({
         data: {
           email: input.email,
@@ -188,3 +188,4 @@ export class AuthService {
     };
   }
 }
+
