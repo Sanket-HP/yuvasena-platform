@@ -3,26 +3,35 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
+
+    "target": "ES2022",
+
     "declaration": false,
     "declarationMap": false,
     "composite": false,
+
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
+
+    "baseUrl": ".",
+
     "paths": {
-      "@/*": ["src/*"]
-    }
+      "@/*": ["src/*"],
+      "@yuvasena/shared": [
+        "../../packages/shared/dist"
+      ]
+    },
+
+    "outDir": "./dist"
   },
+
   "include": [
     "src/**/*",
     "prisma/**/*"
-  ],
-  "references": [
-    { "path": "../../packages/shared" }
   ]
 }
